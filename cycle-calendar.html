@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Awry Network — 18-Day Cycle Calendar</title>
+  <style>
+    :root {
+      --primary: #8A4E22;
+      --accent: #B26C33;
+      --shadow: #5A3217;
+      --bg: #1C1A18;
+      --bone: #EFE9DD;
+      --bone-dim: rgba(239, 233, 221, 0.7);
+      --bone-faint: rgba(239, 233, 221, 0.15);
+      --manifest: #B26C33;
+      --integrate: #5A3217;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--bone);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--bone);
+    }
+
+    header .subtitle {
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 0.35rem;
+    }
+
+    header .rule {
+      width: 80px;
+      height: 2px;
+      background: var(--primary);
+      margin: 0.75rem auto 0;
+    }
+
+    /* Controls */
+    .controls {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--shadow);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+      margin-bottom: 1.5rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .field label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--bone-dim);
+    }
+
+    .field input[type="date"] {
+      background: var(--bg);
+      border: 1px solid var(--shadow);
+      border-radius: 8px;
+      color: var(--bone);
+      padding: 0.65rem 0.85rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field input[type="date"]:focus {
+      border-color: var(--accent);
+    }
+
+    .field input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.85) sepia(0.4) saturate(2) hue-rotate(350deg);
+      cursor: pointer;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: var(--bone);
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .swatch.manifest {
+      background: var(--manifest);
+    }
+
+    .swatch.integrate {
+      background: var(--integrate);
+    }
+
+    .swatch.today {
+      background: transparent;
+      border: 2px solid var(--bone);
+    }
+
+    .swatch.dob {
+      background: var(--bone);
+    }
+
+    /* Status */
+    .status {
+      text-align: center;
+      margin-bottom: 1.25rem;
+      min-height: 1.5rem;
+      color: var(--bone-dim);
+      font-size: 0.95rem;
+    }
+
+    .status strong {
+      color: var(--accent);
+    }
+
+    /* Calendar */
+    .calendar-wrap {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--shadow);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--shadow);
+      background: rgba(0,0,0,0.25);
+    }
+
+    .cal-header h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid var(--shadow);
+      color: var(--bone);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .nav-btn:hover {
+      border-color: var(--accent);
+      background: rgba(178, 108, 51, 0.15);
+    }
+
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid var(--shadow);
+      background: rgba(0,0,0,0.15);
+    }
+
+    .weekday {
+      text-align: center;
+      padding: 0.6rem 0;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--bone-dim);
+    }
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .day {
+      aspect-ratio: 1;
+      min-height: 64px;
+      padding: 0.4rem;
+      border-right: 1px solid var(--bone-faint);
+      border-bottom: 1px solid var(--bone-faint);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      cursor: default;
+      transition: background 0.12s;
+    }
+
+    .day:nth-child(7n) {
+      border-right: none;
+    }
+
+    .day.empty {
+      background: transparent;
+    }
+
+    .day .num {
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.2;
+      z-index: 1;
+    }
+
+    .day .label {
+      font-size: 0.55rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+      opacity: 0.9;
+      text-align: center;
+      line-height: 1.15;
+      z-index: 1;
+    }
+
+    .day.manifest {
+      background: rgba(178, 108, 51, 0.35);
+    }
+
+    .day.integrate {
+      background: rgba(90, 50, 23, 0.55);
+    }
+
+    .day.today {
+      outline: 2px solid var(--bone);
+      outline-offset: -2px;
+      z-index: 2;
+    }
+
+    .day.dob-day .num {
+      background: var(--bone);
+      color: var(--bg);
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .day:hover:not(.empty) {
+      background: rgba(178, 108, 51, 0.5);
+    }
+
+    /* Footer note */
+    .note {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--bone-dim);
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Tooltip-style detail on click/focus */
+    .day-detail {
+      margin-top: 1rem;
+      padding: 0.9rem 1.1rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--shadow);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .day-detail.visible {
+      display: block;
+    }
+
+    .day-detail .type {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    @media (max-width: 600px) {
+      .day {
+        min-height: 52px;
+        padding: 0.25rem;
+      }
+      .day .num {
+        font-size: 0.8rem;
+      }
+      .day .label {
+        font-size: 0.5rem;
+      }
+      header h1 {
+        font-size: 1.4rem;
+      }
+      .controls {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AWRY NETWORK</h1>
+      <div class="subtitle">18-Day Cycle Calendar</div>
+      <div class="rule"></div>
+    </header>
+
+    <div class="controls">
+      <div class="field">
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" />
+      </div>
+      <button class="btn" id="applyBtn" type="button">Apply Cycle</button>
+      <button class="btn" id="todayBtn" type="button" style="background: var(--shadow);">Go to Today</button>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <span class="swatch manifest"></span>
+        <span>Days of Manifestation (1–9)</span>
+      </div>
+      <div class="legend-item">
+        <span class="swatch integrate"></span>
+        <span>Days of Integration (10–18)</span>
+      </div>
+      <div class="legend-item">
+        <span class="swatch today"></span>
+        <span>Today</span>
+      </div>
+      <div class="legend-item">
+        <span class="swatch dob"></span>
+        <span>Date of Birth</span>
+      </div>
+    </div>
+
+    <div class="status" id="status">Enter a date of birth to plot the 18-day cycle.</div>
+
+    <div class="calendar-wrap">
+      <div class="cal-header">
+        <button class="nav-btn" id="prevMonth" aria-label="Previous month">‹</button>
+        <h2 id="monthLabel">—</h2>
+        <button class="nav-btn" id="nextMonth" aria-label="Next month">›</button>
+      </div>
+      <div class="weekdays">
+        <div class="weekday">Sun</div>
+        <div class="weekday">Mon</div>
+        <div class="weekday">Tue</div>
+        <div class="weekday">Wed</div>
+        <div class="weekday">Thu</div>
+        <div class="weekday">Fri</div>
+        <div class="weekday">Sat</div>
+      </div>
+      <div class="days" id="daysGrid"></div>
+    </div>
+
+    <div class="day-detail" id="dayDetail"></div>
+
+    <p class="note">
+      Cycle starts on the date of birth as Day 1 of Manifestation.
+      Days 1–9 are positive (Manifestation). Days 10–18 are negative (Integration).
+      The pattern repeats every 18 days indefinitely.
+    </p>
+  </div>
+
+  <script>
+    const dobInput = document.getElementById("dob");
+    const applyBtn = document.getElementById("applyBtn");
+    const todayBtn = document.getElementById("todayBtn");
+    const statusEl = document.getElementById("status");
+    const monthLabel = document.getElementById("monthLabel");
+    const daysGrid = document.getElementById("daysGrid");
+    const dayDetail = document.getElementById("dayDetail");
+    const prevMonthBtn = document.getElementById("prevMonth");
+    const nextMonthBtn = document.getElementById("nextMonth");
+
+    let dob = null; // Date object at local midnight
+    let viewYear, viewMonth; // currently displayed month
+
+    function toMidnight(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function daysBetween(a, b) {
+      // a and b are midnight dates; returns integer day difference (b - a)
+      const ms = toMidnight(b) - toMidnight(a);
+      return Math.round(ms / 86400000);
+    }
+
+    function cycleInfo(date) {
+      if (!dob) return null;
+      const diff = daysBetween(dob, date);
+      // Day of birth = cycle day 1
+      const pos = ((diff % 18) + 18) % 18; // 0..17
+      const cycleDay = pos + 1; // 1..18
+      const isManifest = cycleDay <= 9;
+      return {
+        cycleDay,
+        isManifest,
+        type: isManifest ? "Manifestation" : "Integration",
+        phase: isManifest ? "positive" : "negative"
+      };
+    }
+
+    function setViewTo(date) {
+      viewYear = date.getFullYear();
+      viewMonth = date.getMonth();
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const first = new Date(viewYear, viewMonth, 1);
+      const last = new Date(viewYear, viewMonth + 1, 0);
+      const startPad = first.getDay(); // 0=Sun
+      const totalDays = last.getDate();
+
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
+
+      daysGrid.innerHTML = "";
+      const today = toMidnight(new Date());
+
+      // Leading empty cells
+      for (let i = 0; i < startPad; i++) {
+        const cell = document.createElement("div");
+        cell.className = "day empty";
+        daysGrid.appendChild(cell);
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        const cell = document.createElement("div");
+        cell.className = "day";
+        const date = new Date(viewYear, viewMonth, d);
+        const num = document.createElement("span");
+        num.className = "num";
+        num.textContent = d;
+        cell.appendChild(num);
+
+        if (dob) {
+          const info = cycleInfo(date);
+          if (info) {
+            cell.classList.add(info.isManifest ? "manifest" : "integrate");
+            const label = document.createElement("span");
+            label.className = "label";
+            label.textContent = info.isManifest ? "Man " + info.cycleDay : "Int " + info.cycleDay;
+            cell.appendChild(label);
+
+            cell.addEventListener("click", () => {
+              dayDetail.classList.add("visible");
+              const dateStr = date.toLocaleDateString(undefined, {
+                weekday: "long", year: "numeric", month: "long", day: "numeric"
+              });
+              dayDetail.innerHTML = `
+                <strong>${dateStr}</strong><br>
+                Cycle Day <strong>${info.cycleDay}</strong> of 18 —
+                <span class="type">Day of ${info.type}</span>
+                (${info.phase})
+              `;
+            });
+          }
+        }
+
+        if (daysBetween(date, today) === 0) {
+          cell.classList.add("today");
+        }
+        if (dob && daysBetween(date, dob) === 0) {
+          cell.classList.add("dob-day");
+        }
+
+        daysGrid.appendChild(cell);
+      }
+
+      // Trailing empties to complete last row
+      const totalCells = startPad + totalDays;
+      const remainder = totalCells % 7;
+      if (remainder !== 0) {
+        for (let i = 0; i < 7 - remainder; i++) {
+          const cell = document.createElement("div");
+          cell.className = "day empty";
+          daysGrid.appendChild(cell);
+        }
+      }
+    }
+
+    function applyDob() {
+      const val = dobInput.value;
+      if (!val) {
+        statusEl.textContent = "Please select a date of birth.";
+        return;
+      }
+      const parts = val.split("-").map(Number);
+      dob = new Date(parts[0], parts[1] - 1, parts[2]);
+      const today = toMidnight(new Date());
+      setViewTo(today);
+
+      const info = cycleInfo(today);
+      if (info) {
+        statusEl.innerHTML = `Today is Cycle Day <strong>${info.cycleDay}</strong> —
+          <strong>Day of ${info.type}</strong> (${info.phase}).`;
+      }
+      dayDetail.classList.remove("visible");
+    }
+
+    applyBtn.addEventListener("click", applyDob);
+    dobInput.addEventListener("change", applyDob);
+
+    todayBtn.addEventListener("click", () => {
+      setViewTo(new Date());
+    });
+
+    prevMonthBtn.addEventListener("click", () => {
+      viewMonth--;
+      if (viewMonth < 0) {
+        viewMonth = 11;
+        viewYear--;
+      }
+      renderCalendar();
+    });
+
+    nextMonthBtn.addEventListener("click", () => {
+      viewMonth++;
+      if (viewMonth > 11) {
+        viewMonth = 0;
+        viewYear++;
+      }
+      renderCalendar();
+    });
+
+    // Initialize view to current month
+    setViewTo(new Date());
+  </script>
+</body>
+</html>
